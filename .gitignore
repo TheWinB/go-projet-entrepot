@@ -4,8 +4,6 @@
 *.dll
 *.so
 *.dylib
-*.mod
-*.sum
 pkg
 
 # Test binary, built with `go test -c`
