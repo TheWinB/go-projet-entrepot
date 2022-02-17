@@ -1,8 +1,15 @@
 # go-projet-entrepot
 
+## Clone project
+```bash
+$ git clone https://github.com/TheWinB/go-projet-entrepot
+$ cd go-projet-entrepot
+```
 
 ## Run
 ```bash
-go run gestion_entrepot
+$ cd src
+$ go build
+$ ./gestion_entrepot -f "path/to/file"
 ```
 
