@@ -86,16 +86,16 @@ func (t Transpalette) getPath(destination Position) ([]Position, error) {
 	count := t.pathMap[destination.Y][destination.X]
 	position := destination
 	for count > 0 {
-		if t.checkPathMapRight(position, count-1) {
+		if t.checkPathMapRight(position, count-1) && !t.checkPathMapRight(position, -1) {
 			position.X = position.X + 1
 			stack = append(stack, position)
-		} else if t.checkPathMapDown(position, count-1) {
+		} else if t.checkPathMapDown(position, count-1) && !t.checkPathMapDown(position, -1) {
 			position.Y = position.Y + 1
 			stack = append(stack, position)
-		} else if t.checkPathMapLeft(position, count-1) {
+		} else if t.checkPathMapLeft(position, count-1) && !t.checkPathMapLeft(position, -1) {
 			position.X = position.X - 1
 			stack = append(stack, position)
-		} else if t.checkPathMapUp(position, count-1) {
+		} else if t.checkPathMapUp(position, count-1) && !t.checkPathMapUp(position, -1) {
 			position.Y = position.Y - 1
 			stack = append(stack, position)
 		}
