@@ -1,10 +1,19 @@
-package parser
+package main
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Transpalette struct {
-	pathMap  [][]int
-	position Position
+	pathMap [][]int
+	Objet
+	Colis
+	action string
+}
+
+func (t Transpalette) String() string {
+	return fmt.Sprintf("Transpalette: %s, %s, %v, %v", t.Nom, t.action, t.Position, t.Colis)
 }
 
 func (t Transpalette) checkPathMapRight(p Position, value int) bool {
@@ -37,9 +46,9 @@ func (t Transpalette) checkPathMapDown(p Position, value int) bool {
 
 func (t *Transpalette) InitPathMap(entrepot Entrepot) {
 	// Reset pathMap with only 0's
-	t.pathMap = make([][]int, entrepot.Height)
+	t.pathMap = make([][]int, entrepot.Longueur)
 	for i := 0; i < len(t.pathMap); i++ {
-		t.pathMap[i] = make([]int, entrepot.Width)
+		t.pathMap[i] = make([]int, entrepot.Largeur)
 	}
 
 	// place -1 for other transplattes or other collisionable objects
@@ -50,7 +59,7 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot) {
 
 	count := 1
 	stack := make([]Position, 0)
-	stack = append(stack, t.position)
+	stack = append(stack, t.Position)
 	for len(stack) > 0 {
 		for _, position := range stack {
 			if t.checkPathMapRight(position, 0) {
@@ -76,10 +85,10 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot) {
 
 func (t Transpalette) getPath(destination Position) ([]Position, error) {
 	if len(t.pathMap) == 0 {
-		return []Position{}, errors.New("Path map was not generated.")
+		return []Position{}, errors.New("path map was not generated")
 	}
 	if t.pathMap[destination.Y][destination.X] == -1 {
-		return []Position{}, errors.New("There is no point in going to that position.")
+		return []Position{}, errors.New("there is no point in going to that position")
 	}
 
 	stack := make([]Position, 0)

@@ -1,23 +1,34 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"os"
-
-	"github.com/akamensky/argparse"
 )
 
-func main() {
-	parser := argparse.NewParser("gestion_entrepot", "")
-	fileFlag := parser.String("f", "file", &argparse.Options{Help: "input file path"})
-	err := parser.Parse(os.Args)
-
+func getFile() (string, error) {
+	av := os.Args[1:]
+	if len(av) == 0 {
+		return "", errors.New("aucun nom de fichier donné")
+	}
+	content, err := ioutil.ReadFile(av[0])
 	if err != nil {
-		log.Fatalln(parser.Usage(err))
+		return "", err
 	}
-	if fileFlag != nil {
-		fmt.Println(*fileFlag)
+	return string(content), nil
+}
+
+func main() {
+	fileContent, err := getFile()
+	if err != nil {
+		fmt.Println("Erreur:\n", err)
+		return
 	}
-	return
+	entrepot, err := Parse(fileContent)
+	if err != nil {
+		fmt.Println("Erreur:\n", err)
+		return
+	}
+	fmt.Println(entrepot)
 }
