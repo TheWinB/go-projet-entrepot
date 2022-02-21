@@ -5,22 +5,23 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/akamensky/argparse"
 )
 
-func getFile() (string, error) {
-	av := os.Args[1:]
-	if len(av) == 0 {
-		return "", errors.New("aucun nom de fichier donné")
-	}
-	content, err := ioutil.ReadFile(av[0])
+func getFile(filePath string) (string, error) {
+	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return "", err
+		return "", errors.New("Impossible de lire ce fichier.")
 	}
 	return string(content), nil
 }
 
 func main() {
-	fileContent, err := getFile()
+	parser := argparse.NewParser("gestion_entrepot", "")
+	fileFlag := parser.String("f", "file", &argparse.Options{Help: "input file path"})
+	err := parser.Parse(os.Args)
+	fileContent, err := getFile(*fileFlag)
 	if err != nil {
 		fmt.Println("Erreur:\n", err)
 		return
