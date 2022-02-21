@@ -8,7 +8,7 @@ $ cd go-projet-entrepot
 
 ## Run
 ```bash
-$ cd src
+$ cd gestion_entrepot
 $ go build
 $ ./gestion_entrepot -f "path/to/file"
 ```
