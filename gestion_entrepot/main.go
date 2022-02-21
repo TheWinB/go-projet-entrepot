@@ -19,13 +19,19 @@ func getFile(filePath string) (string, error) {
 
 func main() {
 	parser := argparse.NewParser("gestion_entrepot", "")
-	fileFlag := parser.String("f", "file", &argparse.Options{Help: "input file path"})
+	fileFlag := parser.String("f", "filePath", &argparse.Options{Help: "input file path"})
 	err := parser.Parse(os.Args)
+	if err != nil {
+		fmt.Println(parser.Usage(err))
+		return
+	}
+
 	fileContent, err := getFile(*fileFlag)
 	if err != nil {
 		fmt.Println("Erreur:\n", err)
 		return
 	}
+
 	entrepot, err := Parse(fileContent)
 	if err != nil {
 		fmt.Println("Erreur:\n", err)
