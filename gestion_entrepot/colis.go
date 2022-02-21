@@ -4,7 +4,8 @@ import "fmt"
 
 type Colis struct {
 	Objet
-	Couleur string
+	Couleur   string
+	ChoisiPar string
 }
 
 func (c Colis) String() string {

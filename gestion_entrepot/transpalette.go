@@ -46,12 +46,22 @@ func (t Transpalette) checkPathMapDown(p Position, value int) bool {
 
 func (t *Transpalette) InitPathMap(entrepot Entrepot) {
 	// Reset pathMap with only 0's
-	t.pathMap = make([][]int, entrepot.Longueur)
+	t.pathMap = make([][]int, entrepot.Largeur)
 	for i := 0; i < len(t.pathMap); i++ {
-		t.pathMap[i] = make([]int, entrepot.Largeur)
+		t.pathMap[i] = make([]int, entrepot.Longueur)
 	}
-
-	// place -1 for other transplattes or other collisionable objects
+	for i := 0; i < len(entrepot.Colis); i++ {
+		if entrepot.Colis[i].ChoisiPar != t.Nom {
+			pos := entrepot.Colis[i].Position
+			t.pathMap[pos.Y][pos.X] = -1
+		}
+	}
+	for i := 0; i < len(entrepot.Transpalettes); i++ {
+		if entrepot.Transpalettes[i].Nom != t.Nom {
+			pos := entrepot.Transpalettes[i].Position
+			t.pathMap[pos.Y][pos.X] = -1
+		}
+	}
 }
 
 func (t *Transpalette) generatePathMap(entrepot Entrepot) {
@@ -85,10 +95,10 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot) {
 
 func (t Transpalette) getPath(destination Position) ([]Position, error) {
 	if len(t.pathMap) == 0 {
-		return []Position{}, errors.New("path map was not generated")
+		return []Position{}, errors.New("La path map n'a pas été généré.")
 	}
 	if t.pathMap[destination.Y][destination.X] == -1 {
-		return []Position{}, errors.New("there is no point in going to that position")
+		return []Position{}, errors.New("Impossible d'aller à cette position.")
 	}
 
 	stack := make([]Position, 0)
