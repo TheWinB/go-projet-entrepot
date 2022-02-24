@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 )
@@ -15,12 +14,13 @@ const (
 type Transpalette struct {
 	pathMap [][]int
 	Objet
-	action       string
-	AObjectif    bool
-	AColis       bool
-	ADestination bool
-	Colis        Colis
-	Desination   Position
+	action     string
+	AObjectif  bool
+	AColis     bool
+	AChemin    bool
+	Colis      Colis
+	Desination Position
+	Chemin     []Position
 }
 
 func (t Transpalette) String() string {
@@ -106,18 +106,8 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot, wg *sync.WaitGroup) {
 	}
 }
 
-func (t *Transpalette) getPath(wg *sync.WaitGroup) ([]Position, error) {
+func (t *Transpalette) getPath(wg *sync.WaitGroup) {
 	defer wg.Done()
-
-	if len(t.pathMap) == 0 {
-		return []Position{}, errors.New("La path map n'a pas été généré.")
-	}
-	if t.pathMap[t.Desination.Y][t.Desination.X] == -1 {
-		return []Position{}, errors.New("Impossible d'aller à cette position.")
-	}
-	if t.AObjectif == false {
-		return []Position{}, errors.New("Cette transpalette n'a pas d'objectif.")
-	}
 
 	stack := make([]Position, 0)
 	count := t.pathMap[t.Desination.Y][t.Desination.X]
@@ -138,8 +128,12 @@ func (t *Transpalette) getPath(wg *sync.WaitGroup) ([]Position, error) {
 		}
 		count--
 	}
-	t.ADestination = true
-	return stack, nil
+	//reverse list
+	for i, j := 0, len(stack)-1; i < j; i, j = i+1, j-1 {
+		stack[i], stack[j] = stack[j], stack[i]
+	}
+	t.AChemin = true
+	t.Chemin = stack
 }
 
 func (t *Transpalette) findBestColis(entrepot *Entrepot) {

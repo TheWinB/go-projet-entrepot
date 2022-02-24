@@ -20,7 +20,7 @@ func run(entrepot *Entrepot) (int, error) {
 		// cal path map foreach transpalette
 		var wg sync.WaitGroup
 		for _, transpalette := range entrepot.Transpalettes {
-			if transpalette.ADestination == false {
+			if transpalette.AChemin == false {
 				wg.Add(1)
 				go transpalette.generatePathMap(*entrepot, &wg)
 			}
@@ -29,7 +29,7 @@ func run(entrepot *Entrepot) (int, error) {
 
 		// cal path foreach transpalette
 		for _, transpalette := range entrepot.Transpalettes {
-			if transpalette.ADestination == false {
+			if transpalette.AChemin == false {
 				wg.Add(1)
 				go transpalette.getPath(&wg)
 			}
