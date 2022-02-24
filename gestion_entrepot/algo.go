@@ -1,37 +1,47 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 func run(entrepot *Entrepot) (int, error) {
-	//tour := 1
-	for _, transpalette := range entrepot.Transpalettes {
-		transpalette.getObjectif(entrepot)
-	}
+	tour := 1
 	fmt.Println(*entrepot)
-	// for len(entrepot.Colis) > 0 && entrepot.Temps <= tour {
-	// 	fmt.Println("tour %d", tour)
+	for len(entrepot.Colis) > 0 && entrepot.Temps <= tour {
+		fmt.Printf("tour %d\n", tour)
+		// find objective foreach transpalette
+		for _, transpalette := range entrepot.Transpalettes {
+			if transpalette.AObjectif == false {
+				transpalette.getObjectif(entrepot)
+			}
+		}
 
-	// 	// find objective foreach transpalette
+		// cal path map foreach transpalette
+		var wg sync.WaitGroup
+		for _, transpalette := range entrepot.Transpalettes {
+			if transpalette.ADestination == false {
+				wg.Add(1)
+				go transpalette.generatePathMap(*entrepot, &wg)
+			}
+		}
+		wg.Wait()
 
-	// 	// cal path map foreach transpalette
-	// 	var wg sync.WaitGroup
-	// 	for _, transpalette := range entrepot.Transpalettes {
-	// 		wg.Add(1)
-	// 		go transpalette.generatePathMap(*entrepot, &wg)
-	// 	}
-	// 	wg.Wait()
+		// cal path foreach transpalette
+		for _, transpalette := range entrepot.Transpalettes {
+			if transpalette.ADestination == false {
+				wg.Add(1)
+				go transpalette.getPath(&wg)
+			}
+		}
+		wg.Wait()
 
-	// 	// cal path foreach transpalette
-	// 	for _, transpalette := range entrepot.Transpalettes {
-	// 		go transpalette.generatePathMap(*entrepot)
-	// 	}
+		// check colisions
 
-	// 	// check colisions
+		// set actions
 
-	// 	// set actions
-
-	// 	// print
-	// 	tour++
-	// }
+		// print
+		tour++
+	}
 	return 0, nil
 }

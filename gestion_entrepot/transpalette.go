@@ -15,11 +15,12 @@ const (
 type Transpalette struct {
 	pathMap [][]int
 	Objet
-	action     string
-	AObjectif  bool
-	AColis     bool
-	Colis      Colis
-	Desination Position
+	action       string
+	AObjectif    bool
+	AColis       bool
+	ADestination bool
+	Colis        Colis
+	Desination   Position
 }
 
 func (t Transpalette) String() string {
@@ -105,7 +106,9 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot, wg *sync.WaitGroup) {
 	}
 }
 
-func (t Transpalette) getPath() ([]Position, error) {
+func (t *Transpalette) getPath(wg *sync.WaitGroup) ([]Position, error) {
+	defer wg.Done()
+
 	if len(t.pathMap) == 0 {
 		return []Position{}, errors.New("La path map n'a pas été généré.")
 	}
@@ -135,6 +138,7 @@ func (t Transpalette) getPath() ([]Position, error) {
 		}
 		count--
 	}
+	t.ADestination = true
 	return stack, nil
 }
 
