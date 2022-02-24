@@ -3,17 +3,27 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sync"
+)
+
+const (
+	T_ACTION_GO   = "GO"
+	T_ACTION_TAKE = "TAKE"
+	T_ACTION_WAIT = "WAIT"
 )
 
 type Transpalette struct {
 	pathMap [][]int
 	Objet
-	Colis
-	action string
+	action     string
+	AObjectif  bool
+	AColis     bool
+	Colis      Colis
+	Desination Position
 }
 
 func (t Transpalette) String() string {
-	return fmt.Sprintf("Transpalette: %s, %s, %v, %v", t.Nom, t.action, t.Position, t.Colis)
+	return fmt.Sprintf("Transpalette: %s, %s, %v, COLIS: %v", t.Nom, t.action, t.Position, t.Colis)
 }
 
 func (t Transpalette) checkPathMapRight(p Position, value int) bool {
@@ -64,7 +74,9 @@ func (t *Transpalette) InitPathMap(entrepot Entrepot) {
 	}
 }
 
-func (t *Transpalette) generatePathMap(entrepot Entrepot) {
+func (t *Transpalette) generatePathMap(entrepot Entrepot, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	t.InitPathMap(entrepot)
 
 	count := 1
@@ -93,17 +105,20 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot) {
 	}
 }
 
-func (t Transpalette) getPath(destination Position) ([]Position, error) {
+func (t Transpalette) getPath() ([]Position, error) {
 	if len(t.pathMap) == 0 {
 		return []Position{}, errors.New("La path map n'a pas été généré.")
 	}
-	if t.pathMap[destination.Y][destination.X] == -1 {
+	if t.pathMap[t.Desination.Y][t.Desination.X] == -1 {
 		return []Position{}, errors.New("Impossible d'aller à cette position.")
+	}
+	if t.AObjectif == false {
+		return []Position{}, errors.New("Cette transpalette n'a pas d'objectif.")
 	}
 
 	stack := make([]Position, 0)
-	count := t.pathMap[destination.Y][destination.X]
-	position := destination
+	count := t.pathMap[t.Desination.Y][t.Desination.X]
+	position := t.Desination
 	for count > 0 {
 		if t.checkPathMapRight(position, count-1) && !t.checkPathMapRight(position, -1) {
 			position.X = position.X + 1
@@ -121,4 +136,68 @@ func (t Transpalette) getPath(destination Position) ([]Position, error) {
 		count--
 	}
 	return stack, nil
+}
+
+func (t *Transpalette) findBestColis(entrepot *Entrepot) {
+	// look for closest colis
+
+	// look position of first coli
+	objectif := &entrepot.Colis[0]
+	distance := objectif.X + objectif.Y
+	for _, coli := range entrepot.Colis {
+		if coli.Position.X+coli.Position.Y < distance && coli.ChoisiPar == "" {
+			objectif = &coli
+			distance = coli.X + coli.Y
+		}
+	}
+	// can still be the first so check if not taken to be sure
+	if objectif.ChoisiPar == "" {
+		t.AObjectif = true
+		t.Desination = objectif.Position
+		objectif.ChoisiPar = t.Objet.Nom
+	} else {
+		t.AObjectif = false
+		t.Desination = t.Position
+	}
+}
+
+func (t *Transpalette) findBestCamion(entrepot *Entrepot) {
+	// look for truck that can take the charge
+	charge := COULEUR_POIDS_MAP[t.Colis.Couleur]
+	objectif := &entrepot.Camions[0]
+	distance := objectif.X + objectif.Y
+	found := false
+	for _, camion := range entrepot.Camions {
+		if charge+camion.ChargeActuel <= camion.ChargeMax && camion.Position.X+camion.Position.Y < distance && camion.Etat == C_ETAT_EN_ATTENTE {
+			objectif = &camion
+			distance = camion.Position.X + camion.Position.Y
+			found = true
+		}
+	}
+	// can still be first so check
+	if found == true && objectif.Etat == C_ETAT_EN_ATTENTE && charge+objectif.ChargeActuel <= objectif.ChargeMax {
+		t.Desination = objectif.Position
+		t.AObjectif = true
+	} else {
+		// look for closest incoming truck
+		objectif = &entrepot.Camions[0]
+		distance = objectif.X + objectif.Y
+		for _, camion := range entrepot.Camions {
+			if charge+camion.ChargeActuel <= camion.ChargeMax && camion.Position.X+camion.Position.Y < distance && camion.Etat == C_ETAT_EN_ATTENTE {
+				objectif = &camion
+				distance = camion.Position.X + camion.Position.Y
+			}
+		}
+		t.Desination = objectif.Position
+		t.AObjectif = true
+	}
+}
+
+func (t *Transpalette) getObjectif(entrepot *Entrepot) {
+	if t.AColis == false && entrepot.availableColis() != 0 {
+		t.findBestColis(entrepot)
+	} else if t.AColis == true {
+		t.findBestCamion(entrepot)
+	}
+	t.AObjectif = false
 }

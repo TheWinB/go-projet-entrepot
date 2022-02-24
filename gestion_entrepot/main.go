@@ -37,5 +37,5 @@ func main() {
 		fmt.Println("Erreur:\n", err)
 		return
 	}
-	fmt.Println(entrepot)
+	run(&entrepot)
 }

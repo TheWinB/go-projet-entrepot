@@ -11,6 +11,17 @@ type Entrepot struct {
 	Camions       []Camion
 }
 
+func (e Entrepot) availableColis() int {
+	res := 0
+
+	for _, coli := range e.Colis {
+		if coli.ChoisiPar == "" {
+			res++
+		}
+	}
+	return res
+}
+
 func (e Entrepot) String() string {
 	return fmt.Sprintf(
 		"----- ENTREPOT -----\n"+
