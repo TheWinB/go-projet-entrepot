@@ -7,31 +7,28 @@ import (
 
 func run(entrepot *Entrepot) (int, error) {
 	tour := 1
-	fmt.Println(*entrepot)
-	for len(entrepot.Colis) > 0 && entrepot.Temps <= tour {
+	for len(entrepot.Colis) > 0 && entrepot.Temps >= tour {
 		fmt.Printf("tour %d\n", tour)
 		// find objective foreach transpalette
-		for _, transpalette := range entrepot.Transpalettes {
-			if transpalette.AObjectif == false {
-				transpalette.getObjectif(entrepot)
+		for i := 0; i < len(entrepot.Transpalettes); i++ {
+			if entrepot.Transpalettes[i].AObjectif == false {
+				entrepot.Transpalettes[i].getObjectif(entrepot)
 			}
 		}
-
 		// cal path map foreach transpalette
 		var wg sync.WaitGroup
-		for _, transpalette := range entrepot.Transpalettes {
-			if transpalette.AChemin == false {
+		for i := 0; i < len(entrepot.Transpalettes); i++ {
+			if entrepot.Transpalettes[i].AObjectif == false {
 				wg.Add(1)
-				go transpalette.generatePathMap(*entrepot, &wg)
+				entrepot.Transpalettes[i].generatePathMap(*entrepot, &wg)
 			}
 		}
-		wg.Wait()
 
 		// cal path foreach transpalette
-		for _, transpalette := range entrepot.Transpalettes {
-			if transpalette.AChemin == false {
+		for i := 0; i < len(entrepot.Transpalettes); i++ {
+			if entrepot.Transpalettes[i].AObjectif == false {
 				wg.Add(1)
-				go transpalette.getPath(&wg)
+				entrepot.Transpalettes[i].getPath(&wg)
 			}
 		}
 		wg.Wait()

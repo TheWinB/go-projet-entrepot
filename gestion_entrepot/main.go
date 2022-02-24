@@ -9,6 +9,16 @@ import (
 	"github.com/akamensky/argparse"
 )
 
+func printIntTab(tab [][]int) {
+	for _, line := range tab {
+		for _, el := range line {
+			fmt.Printf("%d    ", el)
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf("\n\n\n\n")
+}
+
 func getFile(filePath string) (string, error) {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {

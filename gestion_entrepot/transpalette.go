@@ -28,7 +28,7 @@ func (t Transpalette) String() string {
 }
 
 func (t Transpalette) checkPathMapRight(p Position, value int) bool {
-	if p.X+1 < len(t.pathMap[0])+1 {
+	if p.X+1 < len(t.pathMap[0]) {
 		return t.pathMap[p.Y][p.X+1] == value
 	}
 	return false
@@ -49,7 +49,7 @@ func (t Transpalette) checkPathMapUp(p Position, value int) bool {
 }
 
 func (t Transpalette) checkPathMapDown(p Position, value int) bool {
-	if p.Y+1 < len(t.pathMap)+1 {
+	if p.Y+1 < len(t.pathMap) {
 		return t.pathMap[p.Y+1][p.X] == value
 	}
 	return false
@@ -77,32 +77,34 @@ func (t *Transpalette) InitPathMap(entrepot Entrepot) {
 
 func (t *Transpalette) generatePathMap(entrepot Entrepot, wg *sync.WaitGroup) {
 	defer wg.Done()
-
 	t.InitPathMap(entrepot)
 
 	count := 1
 	stack := make([]Position, 0)
 	stack = append(stack, t.Position)
+	newstack := make([]Position, 0)
 	for len(stack) > 0 {
+		newstack = make([]Position, 0)
 		for _, position := range stack {
 			if t.checkPathMapRight(position, 0) {
 				t.pathMap[position.Y][position.X+1] = count
-				stack = append(stack, Position{position.X + 1, position.Y})
+				newstack = append(newstack, Position{position.X + 1, position.Y})
 			}
 			if t.checkPathMapDown(position, 0) {
 				t.pathMap[position.Y+1][position.X] = count
-				stack = append(stack, Position{position.X, position.Y + 1})
+				newstack = append(newstack, Position{position.X, position.Y + 1})
 			}
 			if t.checkPathMapLeft(position, 0) {
 				t.pathMap[position.Y][position.X-1] = count
-				stack = append(stack, Position{position.X - 1, position.Y})
+				newstack = append(newstack, Position{position.X - 1, position.Y})
 			}
 			if t.checkPathMapUp(position, 0) {
 				t.pathMap[position.Y-1][position.X] = count
-				stack = append(stack, Position{position.X, position.Y - 1})
+				newstack = append(newstack, Position{position.X, position.Y - 1})
 			}
-			count++
 		}
+		stack = newstack
+		count++
 	}
 }
 
