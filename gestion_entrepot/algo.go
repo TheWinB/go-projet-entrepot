@@ -44,15 +44,16 @@ func run(entrepot *Entrepot) error {
 		for i, t := range entrepot.Transpalettes {
 			if !t.AChemin {
 				wg.Add(1)
-				entrepot.Transpalettes[i].generatePathMap(*entrepot, &wg)
+				go entrepot.Transpalettes[i].generatePathMap(*entrepot, &wg)
 			}
 		}
+		wg.Wait()
 
 		// cal path foreach transpalette
 		for i, t := range entrepot.Transpalettes {
 			if !t.AChemin {
 				wg.Add(1)
-				entrepot.Transpalettes[i].getPath(&wg)
+				go entrepot.Transpalettes[i].getPath(&wg)
 			}
 		}
 		wg.Wait()
