@@ -22,7 +22,7 @@ func main() {
 	fileFlag := parser.String("f", "filePath", &argparse.Options{Help: "input file path"})
 	err := parser.Parse(os.Args)
 	if err != nil {
-		fmt.Println(parser.Usage(err))
+		fmt.Println("😱\nErreur:\n", parser.Usage(err))
 		return
 	}
 
