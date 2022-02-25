@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 
+// Entrepot is representing the map
 type Entrepot struct {
 	Longueur      int
 	Largeur       int

@@ -2,11 +2,13 @@ package main
 
 import "fmt"
 
+// Constant value satuts for the truck
 const (
 	C_ETAT_EN_ATTENTE   = "WAITING"
 	C_ETAT_EN_LIVRAISON = "GONE"
 )
 
+// Camion struct with param
 type Camion struct {
 	Objet
 	ChargeActuel    int
@@ -31,7 +33,7 @@ func (c Camion) shouldGo(e *Entrepot) bool {
 
 func (c *Camion) getAction(entrepot *Entrepot) string {
 	if c.TempsRestant > 0 {
-		c.TempsRestant -= 1
+		c.TempsRestant--
 		if c.TempsRestant == 0 {
 			c.Etat = C_ETAT_EN_ATTENTE
 			c.ChargeActuel = 0

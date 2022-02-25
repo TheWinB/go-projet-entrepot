@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 
+// Position is position value struct
 type Position struct {
 	X int
 	Y int

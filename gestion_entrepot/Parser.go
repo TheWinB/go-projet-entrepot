@@ -7,20 +7,13 @@ import (
 	"strings"
 )
 
+// ParserError is a string return error
 type ParserError struct {
 	s string
 }
 
 func (e ParserError) Error() string {
 	return e.s
-}
-
-func printTab(tab []string) {
-	fmt.Println("[")
-	for i, v := range tab {
-		fmt.Println(i, ": ", v)
-	}
-	fmt.Println("]")
 }
 
 func getEntrepot(e *Entrepot, s string) error {
@@ -86,18 +79,18 @@ func getColis(e *Entrepot, tab []string) error {
 		c.Nom = stringTab[0]
 		p, err := getPosition(stringTab[1], stringTab[2])
 		if err != nil {
-			return errors.New(fmt.Sprintf("Colis \"%s\":\n%s", c.Nom, err.Error()))
+			return errors.New(fmt.Sprintf("Colis \"%q\":\n%s", c.Nom, err.Error()))
 		}
 		if p.X >= e.Longueur {
-			return errors.New(fmt.Sprintf("Colis \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.X))
+			return errors.New(fmt.Sprintf("Colis \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.X))
 		}
 		if p.Y >= e.Largeur {
-			return errors.New(fmt.Sprintf("Colis \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.Y))
+			return errors.New(fmt.Sprintf("Colis \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.Y))
 		}
 		c.Position = p
-		poids, ok := COULEUR_POIDS_MAP[strings.ToUpper(stringTab[3])]
+		poids, ok := CouleurPoidsMap[strings.ToUpper(stringTab[3])]
 		if !ok {
-			return errors.New(fmt.Sprintf("Colis \"%s\":\nLa couleur %s n'est pas valide", c.Nom, stringTab[3]))
+			return errors.New(fmt.Sprintf("Colis \"%q\":\nLa couleur %s n'est pas valide", c.Nom, stringTab[3]))
 		}
 		if poids > e.PlusGrosColis {
 			e.PlusGrosColis = poids
@@ -118,13 +111,13 @@ func getTranspalette(e *Entrepot, tab []string) error {
 		t.Nom = stringTab[0]
 		p, err := getPosition(stringTab[1], stringTab[2])
 		if err != nil {
-			return errors.New(fmt.Sprintf("Transpalette \"%s\":\n%s", t.Nom, err.Error()))
+			return errors.New(fmt.Sprintf("Transpalette \"%q\":\n%s", t.Nom, err.Error()))
 		}
 		if p.X >= e.Longueur {
-			return errors.New(fmt.Sprintf("Transpalette \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", t.Nom, p.X))
+			return errors.New(fmt.Sprintf("Transpalette \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", t.Nom, p.X))
 		}
 		if p.Y >= e.Largeur {
-			return errors.New(fmt.Sprintf("Transpalette \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", t.Nom, p.Y))
+			return errors.New(fmt.Sprintf("Transpalette \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", t.Nom, p.Y))
 		}
 		t.Position = p
 		e.Transpalettes = append(e.Transpalettes, t)
@@ -142,13 +135,13 @@ func getCamion(e *Entrepot, tab []string) error {
 		c.Nom = stringTab[0]
 		p, err := getPosition(stringTab[1], stringTab[2])
 		if err != nil {
-			return errors.New(fmt.Sprintf("Camion \"%s\":\n%s", c.Nom, err.Error()))
+			return errors.New(fmt.Sprintf("Camion \"%q\":\n%s", c.Nom, err.Error()))
 		}
 		if p.X >= e.Longueur {
-			return errors.New(fmt.Sprintf("Camion \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.X))
+			return errors.New(fmt.Sprintf("Camion \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.X))
 		}
 		if p.Y >= e.Largeur {
-			return errors.New(fmt.Sprintf("Camion \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.Y))
+			return errors.New(fmt.Sprintf("Camion \"%q\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.Y))
 		}
 		c.Position = p
 		i, err := strconv.Atoi(stringTab[3])
@@ -173,6 +166,7 @@ func getCamion(e *Entrepot, tab []string) error {
 	return nil
 }
 
+// Parse is the principal func to Parse the map
 func Parse(fileContent string) (Entrepot, error) {
 	e := Entrepot{}
 	contentTab := strings.Split(fileContent, "\n")

@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// Action list
 const (
 	T_ACTION_GO    = "GO"
 	T_ACTION_TAKE  = "TAKE"
@@ -13,11 +14,13 @@ const (
 	T_ACTION_LEAVE = "LEAVE"
 )
 
+// Objectif list
 const (
 	T_OBJECTIF_CAMION = "CAMION"
 	T_OBJECTIF_COLIS  = "COLIS"
 )
 
+// Transpalette is all information related to Transpalette
 type Transpalette struct {
 	pathMap [][]int
 	Objet
@@ -61,6 +64,7 @@ func (t Transpalette) checkPathMapDown(p Position, value int) bool {
 	return false
 }
 
+// InitPathMap init
 func (t *Transpalette) InitPathMap(entrepot Entrepot) {
 	// Reset pathMap with only 0's
 	t.pathMap = make([][]int, entrepot.Largeur)
@@ -88,7 +92,7 @@ func (t *Transpalette) generatePathMap(entrepot Entrepot, wg *sync.WaitGroup) {
 	count := 1
 	stack := make([]Position, 0)
 	stack = append(stack, t.Position)
-	newstack := make([]Position, 0)
+	var newstack []Position
 	for len(stack) > 0 {
 		newstack = make([]Position, 0)
 		for _, position := range stack {
@@ -122,21 +126,21 @@ func (t *Transpalette) getPath(wg *sync.WaitGroup) {
 	position := t.Destination
 	for count > 0 {
 		if t.checkPathMapRight(position, count-1) && !t.checkPathMapRight(position, -1) {
-			position.X = position.X + 1
+			position.X++
 			stack = append(stack, position)
 		} else if t.checkPathMapDown(position, count-1) && !t.checkPathMapDown(position, -1) {
-			position.Y = position.Y + 1
+			position.Y++
 			stack = append(stack, position)
 		} else if t.checkPathMapLeft(position, count-1) && !t.checkPathMapLeft(position, -1) {
-			position.X = position.X - 1
+			position.X--
 			stack = append(stack, position)
 		} else if t.checkPathMapUp(position, count-1) && !t.checkPathMapUp(position, -1) {
-			position.Y = position.Y - 1
+			position.Y--
 			stack = append(stack, position)
 		}
 		count--
 	}
-	//reverse list
+	// reverse list
 	for i, j := 0, len(stack)-1; i < j; i, j = i+1, j-1 {
 		stack[i], stack[j] = stack[j], stack[i]
 	}
@@ -171,7 +175,7 @@ func (t *Transpalette) findBestColis(entrepot *Entrepot) {
 
 func (t *Transpalette) findBestCamion(entrepot *Entrepot) {
 	// look for truck that can take the charge
-	charge := COULEUR_POIDS_MAP[t.Colis.Couleur]
+	charge := CouleurPoidsMap[t.Colis.Couleur]
 	objectif := &entrepot.Camions[0]
 	distance := int(math.Abs(float64(t.X-objectif.X)) + math.Abs(float64(t.Y-objectif.Y)))
 	found := false
@@ -184,7 +188,7 @@ func (t *Transpalette) findBestCamion(entrepot *Entrepot) {
 		}
 	}
 	// can still be first so check
-	if found == true {
+	if found {
 		t.Destination = objectif.Position
 		t.Objectif = T_OBJECTIF_CAMION
 		objectif.ChargeEnAttente += charge
@@ -234,7 +238,7 @@ func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalett
 			t.action = fmt.Sprintf("%s %s %s", T_ACTION_LEAVE, t.Colis.Nom, t.Colis.Couleur)
 			for i, c := range entrepot.Camions {
 				if t.Destination == c.Position {
-					entrepot.Camions[i].ChargeActuel += COULEUR_POIDS_MAP[t.Colis.Couleur]
+					entrepot.Camions[i].ChargeActuel += CouleurPoidsMap[t.Colis.Couleur]
 				}
 			}
 			t.Colis = Colis{}

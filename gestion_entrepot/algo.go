@@ -42,7 +42,7 @@ func run(entrepot *Entrepot) error {
 		// cal path map foreach transpalette
 		var wg sync.WaitGroup
 		for i, t := range entrepot.Transpalettes {
-			if t.AChemin == false {
+			if !t.AChemin {
 				wg.Add(1)
 				entrepot.Transpalettes[i].generatePathMap(*entrepot, &wg)
 			}
@@ -50,13 +50,12 @@ func run(entrepot *Entrepot) error {
 
 		// cal path foreach transpalette
 		for i, t := range entrepot.Transpalettes {
-			if t.AChemin == false {
+			if !t.AChemin {
 				wg.Add(1)
 				entrepot.Transpalettes[i].getPath(&wg)
 			}
 		}
 		wg.Wait()
-		//fmt.Println(entrepot)
 
 		tourStr := fmt.Sprintf("tour %d\n", tour)
 		for i := range entrepot.Transpalettes {
