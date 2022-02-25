@@ -2,25 +2,31 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sync"
 )
 
 const (
-	T_ACTION_GO   = "GO"
-	T_ACTION_TAKE = "TAKE"
-	T_ACTION_WAIT = "WAIT"
+	T_ACTION_GO    = "GO"
+	T_ACTION_TAKE  = "TAKE"
+	T_ACTION_WAIT  = "WAIT"
+	T_ACTION_LEAVE = "LEAVE"
+)
+
+const (
+	T_OBJECTIF_CAMION = "CAMION"
+	T_OBJECTIF_COLIS  = "COLIS"
 )
 
 type Transpalette struct {
 	pathMap [][]int
 	Objet
-	action     string
-	AObjectif  bool
-	AColis     bool
-	AChemin    bool
-	Colis      Colis
-	Desination Position
-	Chemin     []Position
+	action      string
+	Objectif    string
+	AChemin     bool
+	Colis       Colis
+	Destination Position
+	Chemin      []Position
 }
 
 func (t Transpalette) String() string {
@@ -112,8 +118,8 @@ func (t *Transpalette) getPath(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	stack := make([]Position, 0)
-	count := t.pathMap[t.Desination.Y][t.Desination.X]
-	position := t.Desination
+	count := t.pathMap[t.Destination.Y][t.Destination.X]
+	position := t.Destination
 	for count > 0 {
 		if t.checkPathMapRight(position, count-1) && !t.checkPathMapRight(position, -1) {
 			position.X = position.X + 1
@@ -134,7 +140,7 @@ func (t *Transpalette) getPath(wg *sync.WaitGroup) {
 	for i, j := 0, len(stack)-1; i < j; i, j = i+1, j-1 {
 		stack[i], stack[j] = stack[j], stack[i]
 	}
-	t.AChemin = true
+	t.AChemin = len(stack) > 0
 	t.Chemin = stack
 }
 
@@ -142,22 +148,24 @@ func (t *Transpalette) findBestColis(entrepot *Entrepot) {
 	// look for closest colis
 
 	// look position of first coli
-	objectif := &entrepot.Colis[0]
-	distance := objectif.X + objectif.Y
-	for _, coli := range entrepot.Colis {
-		if coli.Position.X+coli.Position.Y < distance && coli.ChoisiPar == "" {
-			objectif = &coli
-			distance = coli.X + coli.Y
+	objectif := entrepot.Colis[0]
+	distance := int(math.Abs(float64(t.X-objectif.X)) + math.Abs(float64(t.Y-objectif.Y)))
+	for i, coli := range entrepot.Colis {
+		newDistance := int(math.Abs(float64(t.X-coli.X)) + math.Abs(float64(t.Y-coli.Y)))
+		if newDistance < distance && coli.ChoisiPar == "" {
+			objectif = entrepot.Colis[i]
+			distance = newDistance
 		}
 	}
 	// can still be the first so check if not taken to be sure
 	if objectif.ChoisiPar == "" {
-		t.AObjectif = true
-		t.Desination = objectif.Position
-		objectif.ChoisiPar = t.Objet.Nom
+		t.Objectif = T_OBJECTIF_COLIS
+		t.Destination = objectif.Position
+		objectif.ChoisiPar = t.Nom
+		t.Colis = objectif
 	} else {
-		t.AObjectif = false
-		t.Desination = t.Position
+		t.Objectif = ""
+		t.Destination = t.Position
 	}
 }
 
@@ -165,39 +173,86 @@ func (t *Transpalette) findBestCamion(entrepot *Entrepot) {
 	// look for truck that can take the charge
 	charge := COULEUR_POIDS_MAP[t.Colis.Couleur]
 	objectif := &entrepot.Camions[0]
-	distance := objectif.X + objectif.Y
+	distance := int(math.Abs(float64(t.X-objectif.X)) + math.Abs(float64(t.Y-objectif.Y)))
 	found := false
-	for _, camion := range entrepot.Camions {
-		if charge+camion.ChargeActuel <= camion.ChargeMax && camion.Position.X+camion.Position.Y < distance && camion.Etat == C_ETAT_EN_ATTENTE {
-			objectif = &camion
-			distance = camion.Position.X + camion.Position.Y
+	for i, camion := range entrepot.Camions {
+		newDistance := int(math.Abs(float64(t.X-camion.X)) + math.Abs(float64(t.Y-camion.Y)))
+		if charge+camion.ChargeEnAttente <= camion.ChargeMax && newDistance < distance && camion.Etat == C_ETAT_EN_ATTENTE {
+			objectif = &entrepot.Camions[i]
+			distance = newDistance
 			found = true
 		}
 	}
 	// can still be first so check
-	if found == true && objectif.Etat == C_ETAT_EN_ATTENTE && charge+objectif.ChargeActuel <= objectif.ChargeMax {
-		t.Desination = objectif.Position
-		t.AObjectif = true
+	if found == true {
+		t.Destination = objectif.Position
+		t.Objectif = T_OBJECTIF_CAMION
+		objectif.ChargeEnAttente += charge
 	} else {
 		// look for closest incoming truck
 		objectif = &entrepot.Camions[0]
-		distance = objectif.X + objectif.Y
-		for _, camion := range entrepot.Camions {
-			if charge+camion.ChargeActuel <= camion.ChargeMax && camion.Position.X+camion.Position.Y < distance && camion.Etat == C_ETAT_EN_ATTENTE {
-				objectif = &camion
-				distance = camion.Position.X + camion.Position.Y
+		distance := int(math.Abs(float64(t.X-objectif.X)) + math.Abs(float64(t.Y-objectif.Y)))
+		for i, camion := range entrepot.Camions {
+			newDistance := int(math.Abs(float64(t.X-camion.X)) + math.Abs(float64(t.Y-camion.Y)))
+			if charge+camion.ChargeActuel <= camion.ChargeMax && newDistance < distance && camion.Etat == C_ETAT_EN_ATTENTE {
+				objectif = &entrepot.Camions[i]
+				distance = newDistance
 			}
 		}
-		t.Desination = objectif.Position
-		t.AObjectif = true
+		t.Destination = objectif.Position
+		t.Objectif = T_OBJECTIF_CAMION
+		objectif.ChargeEnAttente += charge
 	}
 }
 
 func (t *Transpalette) getObjectif(entrepot *Entrepot) {
-	if t.AColis == false && entrepot.availableColis() != 0 {
+	if t.Colis.Nom == "" && entrepot.availableColis() != 0 {
 		t.findBestColis(entrepot)
-	} else if t.AColis == true {
+	} else if t.Colis.Nom != "" {
 		t.findBestCamion(entrepot)
+	} else {
+		t.Objectif = ""
 	}
-	t.AObjectif = false
+}
+
+func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalette) string {
+	if t.Objectif == "" {
+		t.action = T_ACTION_WAIT
+	} else if len(t.Chemin) == 0 {
+		if t.Objectif == T_OBJECTIF_COLIS {
+			t.action = fmt.Sprintf("%s %s %s", T_ACTION_TAKE, t.Colis.Nom, t.Colis.Couleur)
+			t.AChemin = false
+			t.Objectif = ""
+			for i, c := range entrepot.Colis {
+				if c.Position == t.Colis.Position {
+					entrepot.Colis[i] = entrepot.Colis[len(entrepot.Colis)-1]
+					entrepot.Colis = entrepot.Colis[:len(entrepot.Colis)-1]
+					break
+				}
+			}
+		} else if t.Objectif == T_OBJECTIF_CAMION {
+			t.action = fmt.Sprintf("%s %s %s", T_ACTION_LEAVE, t.Colis.Nom, t.Colis.Couleur)
+			for i, c := range entrepot.Camions {
+				if t.Destination == c.Position {
+					entrepot.Camions[i].ChargeActuel += COULEUR_POIDS_MAP[t.Colis.Couleur]
+				}
+			}
+			t.Colis = Colis{}
+			t.Objectif = ""
+		}
+	} else {
+		wait := false
+		for _, transpalette := range transpalettes {
+			if len(transpalette.Chemin) > 0 && transpalette.Chemin[0] == t.Chemin[0] {
+				wait = true
+			}
+		}
+		if wait {
+			t.action = T_ACTION_WAIT
+		} else {
+			t.action = fmt.Sprintf("%s [%d,%d]", T_ACTION_GO, t.Chemin[0].X, t.Chemin[0].Y)
+			t.Chemin = t.Chemin[1:]
+		}
+	}
+	return fmt.Sprintf("%s %s\n", t.Nom, t.action)
 }

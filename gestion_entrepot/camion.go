@@ -4,17 +4,42 @@ import "fmt"
 
 const (
 	C_ETAT_EN_ATTENTE   = "WAITING"
-	C_ETAT_EN_LIVRAISON = "GO"
+	C_ETAT_EN_LIVRAISON = "GONE"
 )
 
 type Camion struct {
 	Objet
-	ChargeActuel   int
-	ChargeMax      int
-	Etat           string
-	TempsLivraison int
+	ChargeActuel    int
+	ChargeEnAttente int
+	ChargeMax       int
+	Etat            string
+	TempsRestant    int
+	TempsLivraison  int
 }
 
 func (c Camion) String() string {
-	return fmt.Sprintf("%s %d/%d %s/%d", c.Objet.Nom, c.ChargeActuel, c.ChargeMax, c.Etat, c.TempsLivraison)
+	return fmt.Sprintf("%s %d(%d)/%d %s/%d", c.Nom, c.ChargeActuel, c.ChargeEnAttente, c.ChargeMax, c.Etat, c.TempsLivraison)
+}
+
+func (c Camion) shouldGo(e *Entrepot) bool {
+	if c.ChargeActuel > 0 && c.ChargeEnAttente == c.ChargeActuel &&
+		(c.ChargeActuel > c.ChargeMax-e.PlusGrosColis || len(e.Colis) == 0) {
+		return true
+	}
+	return false
+}
+
+func (c *Camion) getAction(entrepot *Entrepot) string {
+	if c.TempsRestant > 0 {
+		c.TempsRestant -= 1
+		if c.TempsRestant == 0 {
+			c.Etat = C_ETAT_EN_ATTENTE
+			c.ChargeActuel = 0
+			c.ChargeEnAttente = 0
+		}
+	} else if c.shouldGo(entrepot) {
+		c.TempsRestant = c.TempsLivraison
+		c.Etat = C_ETAT_EN_LIVRAISON
+	}
+	return fmt.Sprintf("%s %s %d/%d\n", c.Nom, c.Etat, c.ChargeActuel, c.ChargeMax)
 }

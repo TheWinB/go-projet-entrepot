@@ -5,40 +5,76 @@ import (
 	"sync"
 )
 
-func run(entrepot *Entrepot) (int, error) {
-	tour := 1
-	for len(entrepot.Colis) > 0 && entrepot.Temps >= tour {
-		fmt.Printf("tour %d\n", tour)
+func checkEnd(e *Entrepot) bool {
+	if len(e.Colis) != 0 {
+		return false
+	}
+	for _, t := range e.Transpalettes {
+		if t.Objectif != "" {
+			return false
+		}
+	}
+	for _, c := range e.Camions {
+		if c.Etat != C_ETAT_EN_ATTENTE {
+			return false
+		}
+	}
+	return true
+}
+
+func run(entrepot *Entrepot) error {
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("😱\nErreur dans l'algo:", r)
+		}
+	}()
+	tour := 0
+	end := false
+	for entrepot.Temps > tour && !end {
+		tour++
 		// find objective foreach transpalette
-		for i := 0; i < len(entrepot.Transpalettes); i++ {
-			if entrepot.Transpalettes[i].AObjectif == false {
+		for i, t := range entrepot.Transpalettes {
+			if t.Objectif == "" {
 				entrepot.Transpalettes[i].getObjectif(entrepot)
 			}
 		}
 		// cal path map foreach transpalette
 		var wg sync.WaitGroup
-		for i := 0; i < len(entrepot.Transpalettes); i++ {
-			if entrepot.Transpalettes[i].AObjectif == false {
+		for i, t := range entrepot.Transpalettes {
+			if t.AChemin == false {
 				wg.Add(1)
 				entrepot.Transpalettes[i].generatePathMap(*entrepot, &wg)
 			}
 		}
 
 		// cal path foreach transpalette
-		for i := 0; i < len(entrepot.Transpalettes); i++ {
-			if entrepot.Transpalettes[i].AObjectif == false {
+		for i, t := range entrepot.Transpalettes {
+			if t.AChemin == false {
 				wg.Add(1)
 				entrepot.Transpalettes[i].getPath(&wg)
 			}
 		}
 		wg.Wait()
+		//fmt.Println(entrepot)
 
-		// check colisions
-
-		// set actions
-
-		// print
-		tour++
+		tourStr := fmt.Sprintf("tour %d\n", tour)
+		for i := range entrepot.Transpalettes {
+			tourStr += entrepot.Transpalettes[i].getAction(entrepot, entrepot.Transpalettes[i+1:])
+		}
+		for i := range entrepot.Camions {
+			tourStr += entrepot.Camions[i].getAction(entrepot)
+		}
+		end = checkEnd(entrepot)
+		if !end {
+			fmt.Print(tourStr)
+		}
+		fmt.Println()
 	}
-	return 0, nil
+	if entrepot.Temps == tour {
+		fmt.Println("🙂")
+	} else {
+		fmt.Println("😎")
+	}
+	return err
 }

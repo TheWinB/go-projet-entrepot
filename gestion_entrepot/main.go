@@ -38,14 +38,17 @@ func main() {
 
 	fileContent, err := getFile(*fileFlag)
 	if err != nil {
-		fmt.Println("Erreur:\n", err)
+		fmt.Println("😱\nErreur:\n", err)
 		return
 	}
 
 	entrepot, err := Parse(fileContent)
 	if err != nil {
-		fmt.Println("Erreur:\n", err)
+		fmt.Println("😱\nErreur:\n", err)
 		return
 	}
-	run(&entrepot)
+	if err = run(&entrepot); err != nil {
+		fmt.Println("😱\nErreur:\n", err)
+		return
+	}
 }

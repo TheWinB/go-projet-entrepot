@@ -95,9 +95,12 @@ func getColis(e *Entrepot, tab []string) error {
 			return errors.New(fmt.Sprintf("Colis \"%s\":\nla position X est plus grande que la taille de l'entrepot: %d", c.Nom, p.Y))
 		}
 		c.Position = p
-		_, ok := COULEUR_POIDS_MAP[strings.ToUpper(stringTab[3])]
+		poids, ok := COULEUR_POIDS_MAP[strings.ToUpper(stringTab[3])]
 		if !ok {
 			return errors.New(fmt.Sprintf("Colis \"%s\":\nLa couleur %s n'est pas valide", c.Nom, stringTab[3]))
+		}
+		if poids > e.PlusGrosColis {
+			e.PlusGrosColis = poids
 		}
 		c.Couleur = strings.ToUpper(stringTab[3])
 		e.Colis = append(e.Colis, c)

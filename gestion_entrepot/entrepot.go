@@ -9,6 +9,7 @@ type Entrepot struct {
 	Colis         []Colis
 	Transpalettes []Transpalette
 	Camions       []Camion
+	PlusGrosColis int
 }
 
 func (e Entrepot) availableColis() int {
@@ -23,22 +24,26 @@ func (e Entrepot) availableColis() int {
 }
 
 func (e Entrepot) String() string {
-	return fmt.Sprintf(
+	str := fmt.Sprintf(
 		"----- ENTREPOT -----\n"+
 			"Longueur: %d\n"+
 			"Largeur: %d\n"+
-			"Temps Restant: %d\n"+
-			"Colis:\n"+
-			"%v\n"+
-			"Transpalettes\n"+
-			"%v\n"+
-			"Camions:\n"+
-			"%v",
+			"Temps Restant: %d\n",
 		e.Longueur,
 		e.Largeur,
 		e.Temps,
-		e.Colis,
-		e.Transpalettes,
-		e.Camions,
 	)
+	str += "--\nColis:\n"
+	for i, c := range e.Colis {
+		str += fmt.Sprintf("%d: %v\n", i, c)
+	}
+	str += "--\nTranspalettes:\n"
+	for i, c := range e.Transpalettes {
+		str += fmt.Sprintf("%d: %v\n", i, c)
+	}
+	str += "--\nCamions:\n"
+	for i, c := range e.Camions {
+		str += fmt.Sprintf("%d: %v\n", i, c)
+	}
+	return str
 }
