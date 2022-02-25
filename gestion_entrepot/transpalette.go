@@ -220,11 +220,14 @@ func (t *Transpalette) getObjectif(entrepot *Entrepot) {
 }
 
 func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalette) string {
+	actionStr := ""
 	if t.Objectif == "" {
 		t.action = T_ACTION_WAIT
+		actionStr = T_ACTION_LEAVE
 	} else if len(t.Chemin) == 0 {
 		if t.Objectif == T_OBJECTIF_COLIS {
-			t.action = fmt.Sprintf("%s %s %s", T_ACTION_TAKE, t.Colis.Nom, t.Colis.Couleur)
+			t.action = T_ACTION_TAKE
+			actionStr = fmt.Sprintf("%s %s %s", T_ACTION_TAKE, t.Colis.Nom, t.Colis.Couleur)
 			t.AChemin = false
 			t.Objectif = ""
 			for i, c := range entrepot.Colis {
@@ -235,7 +238,8 @@ func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalett
 				}
 			}
 		} else if t.Objectif == T_OBJECTIF_CAMION {
-			t.action = fmt.Sprintf("%s %s %s", T_ACTION_LEAVE, t.Colis.Nom, t.Colis.Couleur)
+			t.action = T_ACTION_LEAVE
+			actionStr = fmt.Sprintf("%s %s %s", T_ACTION_LEAVE, t.Colis.Nom, t.Colis.Couleur)
 			for i, c := range entrepot.Camions {
 				if t.Destination == c.Position {
 					entrepot.Camions[i].ChargeActuel += CouleurPoidsMap[t.Colis.Couleur]
@@ -247,16 +251,20 @@ func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalett
 	} else {
 		wait := false
 		for _, transpalette := range transpalettes {
-			if len(transpalette.Chemin) > 0 && transpalette.Chemin[0] == t.Chemin[0] {
+			if len(transpalette.Chemin) > 0 &&
+				(transpalette.action == T_ACTION_GO && transpalette.Chemin[0] == t.Chemin[0]) ||
+				transpalette.Position == t.Chemin[0] {
 				wait = true
 			}
 		}
 		if wait {
 			t.action = T_ACTION_WAIT
+			actionStr = T_ACTION_WAIT
 		} else {
-			t.action = fmt.Sprintf("%s [%d,%d]", T_ACTION_GO, t.Chemin[0].X, t.Chemin[0].Y)
+			t.action = T_ACTION_GO
+			actionStr = fmt.Sprintf("%s [%d,%d]", T_ACTION_GO, t.Chemin[0].X, t.Chemin[0].Y)
 			t.Chemin = t.Chemin[1:]
 		}
 	}
-	return fmt.Sprintf("%s %s\n", t.Nom, t.action)
+	return fmt.Sprintf("%s %s\n", t.Nom, actionStr)
 }

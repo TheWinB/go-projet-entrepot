@@ -59,7 +59,7 @@ func run(entrepot *Entrepot) error {
 
 		tourStr := fmt.Sprintf("tour %d\n", tour)
 		for i := range entrepot.Transpalettes {
-			tourStr += entrepot.Transpalettes[i].getAction(entrepot, entrepot.Transpalettes[i+1:])
+			tourStr += entrepot.Transpalettes[i].getAction(entrepot, entrepot.Transpalettes[:i])
 		}
 		for i := range entrepot.Camions {
 			tourStr += entrepot.Camions[i].getAction(entrepot)
