@@ -223,7 +223,7 @@ func (t *Transpalette) getAction(entrepot *Entrepot, transpalettes []Transpalett
 	actionStr := ""
 	if t.Objectif == "" {
 		t.action = T_ACTION_WAIT
-		actionStr = T_ACTION_LEAVE
+		actionStr = T_ACTION_WAIT
 	} else if len(t.Chemin) == 0 {
 		if t.Objectif == T_OBJECTIF_COLIS {
 			t.action = T_ACTION_TAKE
